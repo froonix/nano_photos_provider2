@@ -6,8 +6,8 @@
  * This PHP application will publish your images and albums from a PHP webserver to nanogallery2.
  * The content is provided on demand, one album at one time.
  * Thumbnails and blurred preview images are generated automatically.
- * 
- * License: GPLv3 for personal, non-profit organizations, or open source projects (without any kind of fee), you may use nanogallery2 for free. 
+ *
+ * License: GPLv3 for personal, non-profit organizations, or open source projects (without any kind of fee), you may use nanogallery2 for free.
  * -------- ALL OTHER USES REQUIRE THE PURCHASE OF A COMMERCIAL LICENSE.
  *
  *
@@ -39,7 +39,7 @@ switch (ENVIRONMENT) {
 
     case 'production':
         ini_set('display_errors', 0);
-        
+
         if (version_compare(PHP_VERSION, '5.3', '>=')) {
             error_reporting(E_ALL & ~E_NOTICE & ~E_DEPRECATED & ~E_STRICT & ~E_USER_NOTICE & ~E_USER_DEPRECATED);
         } else {
@@ -55,7 +55,7 @@ switch (ENVIRONMENT) {
             echo $output;
             exit;
         }
-        
+
         // called at the end of the script (including abnormal end)
         register_shutdown_function( function(){
             $last_error = error_get_last();

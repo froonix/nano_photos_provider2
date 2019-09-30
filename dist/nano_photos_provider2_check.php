@@ -10,16 +10,16 @@
       echo 'PHP GD library is NOT installed on your web server';
   }
   echo '<br>';
-    
+
   echo 'Free disk space: ' . disk_free_space('.');
   echo '<br><br>';
-  
+
   echo '<b>Content folder:</b><br>' ;
   $config = parse_ini_file('./nano_photos_provider2.cfg', true);
   $content_folder = $config['config']['contentFolder'];
   $fileExtensions = $config['config']['fileExtensions'];
 
-  
+
   $dh = opendir($content_folder);
 
   // check the content folder
@@ -39,9 +39,9 @@
       }
     }
     closedir($dh);
-  }  
-  
+  }
+
   echo '<br><br><br><br><br>';
   phpinfo();
-  
+
 ?>
