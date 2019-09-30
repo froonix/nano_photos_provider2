@@ -279,7 +279,7 @@ class galleryJSON
       header('Content-Type: application/json; charset=utf-8');
 
       // add app version
-      $response[nanophotosprovider] = self::APP_VERSION;
+      $response['nanophotosprovider'] = self::APP_VERSION;
       // return the data
       $output = json_encode($response);     // UTF-8 encoding is mandatory
       if (isset($_GET['jsonp'])) {
