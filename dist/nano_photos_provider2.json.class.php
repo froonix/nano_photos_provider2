@@ -88,16 +88,11 @@ class galleryJSON
       $this->setConfig(self::CONFIG_FILE);
 
       // thumbnail responsive sizes
-      $this->tn_size['wxs']   = strtolower($this->CheckThumbnailSize( $_GET['wxs'] ));
-      $this->tn_size['hxs']   = strtolower($this->CheckThumbnailSize( $_GET['hxs'] ));
-      $this->tn_size['wsm']   = strtolower($this->CheckThumbnailSize( $_GET['wsm'] ));
-      $this->tn_size['hsm']   = strtolower($this->CheckThumbnailSize( $_GET['hsm'] ));
-      $this->tn_size['wme']   = strtolower($this->CheckThumbnailSize( $_GET['wme'] ));
-      $this->tn_size['hme']   = strtolower($this->CheckThumbnailSize( $_GET['hme'] ));
-      $this->tn_size['wla']   = strtolower($this->CheckThumbnailSize( $_GET['wla'] ));
-      $this->tn_size['hla']   = strtolower($this->CheckThumbnailSize( $_GET['hla'] ));
-      $this->tn_size['wxl']   = strtolower($this->CheckThumbnailSize( $_GET['wxl'] ));
-      $this->tn_size['hxl']   = strtolower($this->CheckThumbnailSize( $_GET['hxl'] ));
+      foreach(['wxs', 'hxs', 'wsm', 'hsm', 'wme', 'hme', 'wla', 'hla', 'wxl', 'hxl'] as $_)
+      {
+        $this->tn_size[$_] = $this->CheckThumbnailSize((!empty($_GET[$_]) && is_string($_GET[$_])) ? $_GET[$_] : 'auto');
+      }
+      unset($_);
 
       $this->data           = new galleryData();
       $this->data->fullDir  = ($this->config['contentFolder']) . ($this->album);
@@ -230,28 +225,22 @@ class galleryJSON
      */
     protected function CheckThumbnailSize( $size )
     {
-      if( !array_key_exists("allowedSizeValues",$this->config['thumbnails']) || $this->config['thumbnails']['allowedSizeValues'] == "" ) {
-        // no size restriction
+      $size = strtolower($size);
+
+      if(!empty($this->config['thumbnails']['allowedSizeValues']) && !in_array($size, array_map('trim', explode('|', strtolower($this->config['thumbnails']['allowedSizeValues']))), true)) {
+        $this->SendData(['nano_status' => 'error', 'nano_message' => 'requested thumbnail size not allowed: ' . $size]);
+        exit;
+      }
+
+      if($size !== 'auto')
+      {
+        return abs((int) $size);
+      }
+      else
+      {
         return $size;
       }
-
-      $s=explode('|', $this->config['thumbnails']['allowedSizeValues']);
-      if( is_array($s) ) {
-        foreach($s as $one) {
-          $one = trim($one);
-          if( $one == $size ) {
-            return $size;
-          }
-        }
-      }
-
-      $response = array( 'nano_status' => 'error', 'nano_message' => 'requested thumbnail size not allowed: '. $size );
-      $this->SendData($response);
-      exit;
-
     }
-
-
 
     /**
      * SEND THE RESPONSE BACK
