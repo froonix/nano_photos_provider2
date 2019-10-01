@@ -77,7 +77,7 @@ class galleryJSON
       $this->albumID = '';
       if (isset($_GET['albumID'])) {
         $this->albumID = rawurldecode($_GET['albumID']);
-
+        $this->albumID = preg_replace('#(^|/)..(/|$)#', '', $this->albumID);
       }
       if (!$this->albumID == '0' && $this->albumID != '' && $this->albumID != null) {
         $this->album = '/' . $this->CustomDecode($this->albumID) . '/';
@@ -100,7 +100,13 @@ class galleryJSON
       $lstImages = array();
       $lstAlbums = array();
 
-      $dh = opendir($this->data->fullDir);
+      if(!file_exists($this->data->fullDir) || !is_dir($this->data->fullDir) || !is_readable($this->data->fullDir) || !($dh = opendir($this->data->fullDir)))
+      {
+        // album not found
+        $response = array( 'nano_status' => 'error', 'nano_message' => 'album not found: ' . rawurlencode($this->data->fullDir) );
+        $this->SendData($response);
+        exit;
+      }
 
       // check if cached JSON is up to date
       $JSON_file = $this->data->fullDir . '_thumbnails/cache.json';
@@ -108,76 +114,26 @@ class galleryJSON
         $JSON_time = filemtime($JSON_file);
 
         // loop to compare files/directories creation time
-        if ($dh != false) {
-
-          $uptodate = true;
-          while (false !== ($filename = readdir($dh))) {
-            if (is_file($this->data->fullDir . $filename) ) {
-              // it's a file
-              if ($filename != '.' &&
-                      $filename != '..' &&
-                      $filename != '_thumbnails' &&
-                      // preg_match - If the i modifier is set, letters in the pattern match both upper and lower case letters
-                      preg_match("/\.(" . $this->config['fileExtensions'] . ")*$/i", $filename) &&
-                      strpos($filename, $this->config['ignoreDetector']) == false )
-              {
-                // check creation and modification time
-                if( filemtime( $this->data->fullDir . $filename ) > $JSON_time || filectime( $this->data->fullDir . $filename ) > $JSON_time ) {
-                  $uptodate = false;
-                  break;
-                }
-              }
-            }
-            else {
-              // it's a folder
-              $files = preg_grep('~\.('.$this->config['fileExtensions'].')$~i', scandir($this->data->fullDir . $filename));     // to check if folder contains images
-              if ($filename != '.' &&
-                      $filename != '..' &&
-                      $filename != '_thumbnails' &&
-                      strpos($filename, $this->config['ignoreDetector']) == false &&
-                      !empty($files) )
-              {
-                // check creation and modification time
-                if( filemtime( $this->data->fullDir . $filename ) > $JSON_time || filectime( $this->data->fullDir . $filename ) > $JSON_time ) {
-                  $uptodate = false;
-                  break;
-                }
-                // $lstAlbums[] = $this->PrepareData($filename, 'ALBUM');
-              }
-            }
-          }
-
-          if( $uptodate == true ) {
-            // JSON cached file is uptodate -> use it
-            $objData = file_get_contents($JSON_file);
-            $response = unserialize($objData);
-            if( !empty($response) ){
-              closedir($dh);
-              $this->SendData($response);
-              exit ;
-            }
-          }
-
-          rewinddir( $dh );
-        }
-      }
-      // loop the folder to retrieve images and albums
-      if ($dh != false) {
+        $uptodate = true;
         while (false !== ($filename = readdir($dh))) {
           if (is_file($this->data->fullDir . $filename) ) {
             // it's a file
             if ($filename != '.' &&
                     $filename != '..' &&
                     $filename != '_thumbnails' &&
+                    // preg_match - If the i modifier is set, letters in the pattern match both upper and lower case letters
                     preg_match("/\.(" . $this->config['fileExtensions'] . ")*$/i", $filename) &&
                     strpos($filename, $this->config['ignoreDetector']) == false )
             {
-              $lstImages[] = $this->PrepareData($filename, 'IMAGE');
+              // check creation and modification time
+              if( filemtime( $this->data->fullDir . $filename ) > $JSON_time || filectime( $this->data->fullDir . $filename ) > $JSON_time ) {
+                $uptodate = false;
+                break;
+              }
             }
           }
           else {
             // it's a folder
-            //$files = glob($this->data->fullDir . $filename."/*.{".str_replace("|",",",$this->config['fileExtensions'])."}", GLOB_BRACE);    // to check if folder contains images - warning - glob is not supported by all platforms
             $files = preg_grep('~\.('.$this->config['fileExtensions'].')$~i', scandir($this->data->fullDir . $filename));     // to check if folder contains images
             if ($filename != '.' &&
                     $filename != '..' &&
@@ -185,18 +141,57 @@ class galleryJSON
                     strpos($filename, $this->config['ignoreDetector']) == false &&
                     !empty($files) )
             {
-              $lstAlbums[] = $this->PrepareData($filename, 'ALBUM');
+              // check creation and modification time
+              if( filemtime( $this->data->fullDir . $filename ) > $JSON_time || filectime( $this->data->fullDir . $filename ) > $JSON_time ) {
+                $uptodate = false;
+                break;
+              }
+              // $lstAlbums[] = $this->PrepareData($filename, 'ALBUM');
             }
           }
         }
-        closedir($dh);
+
+        if( $uptodate == true ) {
+          // JSON cached file is uptodate -> use it
+          $objData = file_get_contents($JSON_file);
+          $response = unserialize($objData);
+          if( !empty($response) ){
+            closedir($dh);
+            $this->SendData($response);
+            exit ;
+          }
+        }
+
+        rewinddir( $dh );
       }
-			else {
-				// album not found
-				$response = array( 'nano_status' => 'error', 'nano_message' => 'album not found: ' . rawurlencode($this->data->fullDir) );
-				$this->SendData($response);
-				exit;
-			}
+      // loop the folder to retrieve images and albums
+      while (false !== ($filename = readdir($dh))) {
+        if (is_file($this->data->fullDir . $filename) ) {
+          // it's a file
+          if ($filename != '.' &&
+                  $filename != '..' &&
+                  $filename != '_thumbnails' &&
+                  preg_match("/\.(" . $this->config['fileExtensions'] . ")*$/i", $filename) &&
+                  strpos($filename, $this->config['ignoreDetector']) == false )
+          {
+            $lstImages[] = $this->PrepareData($filename, 'IMAGE');
+          }
+        }
+        else {
+          // it's a folder
+          //$files = glob($this->data->fullDir . $filename."/*.{".str_replace("|",",",$this->config['fileExtensions'])."}", GLOB_BRACE);    // to check if folder contains images - warning - glob is not supported by all platforms
+          $files = preg_grep('~\.('.$this->config['fileExtensions'].')$~i', scandir($this->data->fullDir . $filename));     // to check if folder contains images
+          if ($filename != '.' &&
+                  $filename != '..' &&
+                  $filename != '_thumbnails' &&
+                  strpos($filename, $this->config['ignoreDetector']) == false &&
+                  !empty($files) )
+          {
+            $lstAlbums[] = $this->PrepareData($filename, 'ALBUM');
+          }
+        }
+      }
+      closedir($dh);
 
       // sort data
       // usort($lstAlbums, array('galleryJSON', 'Compare'));
