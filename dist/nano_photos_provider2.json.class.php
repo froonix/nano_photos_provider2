@@ -78,7 +78,7 @@ class galleryJSON
       if (isset($_GET['albumID'])) {
         $this->albumID = rawurldecode($_GET['albumID']);
         $this->albumID = str_replace("\0", '', $this->albumID);
-        $this->albumID = preg_replace('#(^|/)..(/|$)#', '', $this->albumID);
+        $this->albumID = preg_replace('#(^|/)(..|_thumbnails)(/|$)#', '', $this->albumID);
       }
       if (!$this->albumID == '0' && $this->albumID != '' && $this->albumID != null) {
         $this->album = '/' . $this->CustomDecode($this->albumID) . '/';
