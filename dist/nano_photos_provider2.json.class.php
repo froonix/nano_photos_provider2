@@ -777,10 +777,10 @@ class galleryJSON
       $width  = $size[0];
       $height = $size[1];
 
-      $originalAspect = $width / $height;
-      $thumbAspect    = $thumbWidth / $thumbHeight;
-
       if ( $thumbWidth != 'auto' && $thumbHeight != 'auto' ) {
+        $originalAspect = $width / $height;
+        $thumbAspect    = $thumbWidth / $thumbHeight;
+
         // IMAGE CROP
         // some inspiration found in donkeyGallery (from Gix075) https://github.com/Gix075/donkeyGallery
         if ($originalAspect >= $thumbAspect) {
