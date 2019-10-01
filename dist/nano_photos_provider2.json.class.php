@@ -50,6 +50,7 @@ class item
     public $mtime       = '';             // modified time of image or album
     public $ctime       = '';             // creation time of image or album
     public $sort        = '';             // a sort string not displayed
+    public $tags        = '';             // ...
     // public $dcGIF       = '#000';      // image dominant color
 
 
