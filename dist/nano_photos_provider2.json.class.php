@@ -496,7 +496,7 @@ class galleryJSON
     // Fix image orientation
     function image_fix_orientation(&$image, &$size, $filename) {
 
-      $exif = exif_read_data($filename);
+      $exif = @exif_read_data($filename);
       if ($exif !== false && !empty($exif['Orientation'])) {
         switch ($exif['Orientation']) {
           case 3:
